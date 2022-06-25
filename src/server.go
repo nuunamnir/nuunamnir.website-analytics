@@ -13,6 +13,9 @@ import (
 )
 
 type Payload struct {
+	EventType string
+	ClickTarget string
+	ClosestLinkHref string
 	UserAgent string
 	HardwareConcurrency int
 	DeviceMemory float32
@@ -27,33 +30,31 @@ type Payload struct {
 }
 
 func (ich *InfluxClientHandler) Monitor(w http.ResponseWriter, r *http.Request) {
-	log.Println("Monitor:")
-	log.Println(r.RemoteAddr)
 	var p Payload
 	err := json.NewDecoder(r.Body).Decode(&p)
 	if err != nil {
 		log.Fatal("Cannot read payload.")
 	}
-	log.Println(p.UserAgent)
-	log.Println(p.HardwareConcurrency)
-	log.Println(p.DeviceMemory)
-	log.Println(p.MaxTouchPoints)
-	log.Println(p.Language)
-	log.Println(p.Href)
-	log.Println(p.Referrer)
-	log.Println(p.NId)
-	log.Println(p.CookieEnabled)
-	log.Println(p.PDFViewerEnabled)
-	log.Println(p.OnLine)
 	w.WriteHeader(http.StatusOK)
 	
 	tags := map[string]string{
 		"website_id": p.NId,	
 		"visitor_ip": r.RemoteAddr,
+		"event_type": p.EventType,
 	}
 	fields := map[string]interface{}{
+		"click_target": p.ClickTarget,
+		"closest_link_href": p.ClosestLinkHref,
+		"user_agent": p.UserAgent,
 		"current_page": p.Href,
+		"referrer": p.Referrer,
 		"cpu_cores": p.HardwareConcurrency,
+		"device_memory": p.DeviceMemory,
+		"max_touch_points": p.MaxTouchPoints,
+		"language": p.Language,
+		"cookie_support": p.CookieEnabled,
+		"pdf_support": p.PDFViewerEnabled,
+		"online": p.OnLine,
 	}
 
 	influx_p := influxdb2.NewPoint("event",
@@ -64,15 +65,25 @@ func (ich *InfluxClientHandler) Monitor(w http.ResponseWriter, r *http.Request) 
 	ich.WriteAPI.Flush() // should probably be removed after testing, might have performance impact
 }
 
-func MonitorPixel(w http.ResponseWriter, r *http.Request) {
-	log.Println("MonitorPixel:")
-	log.Println(r.RemoteAddr)
+func (ich *InfluxClientHandler) MonitorPixel(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["nid"]
-	if !ok {
-		log.Fatal("Cannot read URL parameters.")
-	} else {
-		log.Println(keys[0])
-	}
+	if ok {
+		tags := map[string]string{
+			"website_id": keys[0],	
+			"visitor_ip": r.RemoteAddr,
+			"event_type": "page_pixel",
+		}
+		fields := map[string]interface{}{
+			"ping": true,
+		}
+
+		influx_p := influxdb2.NewPoint("event",
+			tags,
+			fields,
+			time.Now())
+		ich.WriteAPI.WritePoint(influx_p)
+		ich.WriteAPI.Flush() // should probably be removed after testing, might have performance impact
+	} 
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -90,6 +101,7 @@ type InfluxClientHandler struct {
 
 
 func main() {
+	log.Println("nuunamnir website analytics tracking server started ...")
 	godotenv.Load("../data/input/credentials.env")
 	dbToken := os.Getenv("INFLUXDB_TOKEN")
 	dbURL := os.Getenv("INFLUXDB_URL")
@@ -108,7 +120,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/status", Status)
 	mux.HandleFunc("/monitor", myInfluxClientHandler.Monitor)
-	mux.HandleFunc("/monitor.gif", MonitorPixel)
+	mux.HandleFunc("/monitor.gif", myInfluxClientHandler.MonitorPixel)
 	mux.HandleFunc("/favicon.ico", FavIcon)
 	handler := c.Handler(mux)
 	http.ListenAndServe(":3106", handler)
