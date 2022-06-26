@@ -28,6 +28,7 @@ type Payload struct {
 	CookieEnabled bool
 	PDFViewerEnabled bool
 	OnLine bool
+	GPU string
 }
 
 func (ich *InfluxClientHandler) Monitor(w http.ResponseWriter, r *http.Request) {
@@ -66,6 +67,7 @@ func (ich *InfluxClientHandler) Monitor(w http.ResponseWriter, r *http.Request) 
 			"cookie_support": p.CookieEnabled,
 			"pdf_support": p.PDFViewerEnabled,
 			"online": p.OnLine,
+			"gpu": p.GPU,
 			"q_source": QSource,
 			"q_medium": QMedium,
 			"q_campaign": QCampaign,

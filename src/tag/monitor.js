@@ -1,5 +1,13 @@
 var nid = "79796f3e-d63d-4608-9ce8-f375eb91129f";
 
+var canvas = document.getElementById("webtracking-canvas");
+if (!canvas) {
+    canvas = document.createElement("canvas")
+    canvas.setAttribute("id", "webtracking-canvas")
+}
+var gl = canvas.getContext("webgl");
+var gpu = gl.getParameter(gl.RENDERER);
+
 async function noninteractionEvent() {
     const payload = {
         eventType: "page_load",
@@ -15,6 +23,7 @@ async function noninteractionEvent() {
         nid: nid,
         cookieEnabled: window.navigator.cookieEnabled,
         onLine: window.navigator.onLine,
+        GPU: gpu,
     }
     const response = await fetch("http://localhost:3106/monitor", {
         method: "POST",
@@ -52,6 +61,7 @@ async function interceptClickEvent(e) {
         nid: nid,
         cookieEnabled: window.navigator.cookieEnabled,
         onLine: window.navigator.onLine,
+        GPU: gpu,
     }
     const response = await fetch("http://localhost:3106/monitor", {
         method: "POST",
