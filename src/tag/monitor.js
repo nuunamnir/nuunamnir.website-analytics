@@ -25,7 +25,7 @@ async function noninteractionEvent() {
         onLine: window.navigator.onLine,
         GPU: gpu,
     }
-    const response = await fetch("http://localhost:3106/monitor", {
+    const response = await fetch("https://www.nuunamnir.com:3106/monitor", {
         method: "POST",
         body: JSON.stringify(payload),
         headers: {
@@ -63,7 +63,7 @@ async function interceptClickEvent(e) {
         onLine: window.navigator.onLine,
         GPU: gpu,
     }
-    const response = await fetch("http://localhost:3106/monitor", {
+    const response = await fetch("https://www.nuunamnir.com:3106/monitor", {
         method: "POST",
         body: JSON.stringify(payload),
         headers: {
