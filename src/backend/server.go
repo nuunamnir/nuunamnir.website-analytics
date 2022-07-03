@@ -144,8 +144,8 @@ func main() {
 	mux.HandleFunc("/favicon.ico", FavIcon)
 	handler := c.Handler(mux)
 
-	tlsCert = os.Getenv("TLS_CERT")
-	tlsKey = os.Getenv("TLS_KEY")
+	tlsCert := os.Getenv("TLS_CERT")
+	tlsKey := os.Getenv("TLS_KEY")
 	http.ListenAndServeTLS(":3106", tlsCert, tlsKey, handler)
 
 	defer client.Close()
